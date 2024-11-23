@@ -8,6 +8,7 @@ import BodyContent from "./pages/home/BodyContent";
 import NFTPage from "./pages/nft/NFTPage";
 import MyNFT from "./pages/user/MyNFT";
 import UserClientPage from './pages/view/ClientUser';
+import RegisterPage from "./components/RegisterPage";
 function App() {
     return (
         <>
@@ -24,6 +25,7 @@ function App() {
                     <Route path="user/nft/:id" element={<MyNFT />}></Route>
 
                     <Route path="nft" element={<NFTPage />}></Route>
+                    <Route path="register" element={<RegisterPage />} />
                 </Route>
             </Routes>
         </>
