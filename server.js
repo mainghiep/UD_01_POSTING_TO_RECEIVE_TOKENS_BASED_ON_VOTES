@@ -2,16 +2,15 @@ import express from 'express';
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import cors from 'cors';
-// Định nghĩa API Key từ GameShift
 
 const GAMESHIFT_API_BASE = "https://api.gameshift.dev/nx/users";
 
 const app = express();
 const PORT = 8888;
 app.use(cors({
-    origin: 'http://localhost:5173', // Thay bằng domain frontend của bạn
-    methods: ['GET', 'POST'], // Cho phép các phương thức cần thiết
-    allowedHeaders: ['Content-Type', 'x-api-key'], // Cho phép header 'Content-Type' và các header khác nếu cần
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'x-api-key'],
 }));
 app.use(bodyParser.json());
 
@@ -19,7 +18,6 @@ app.use(bodyParser.json());
 app.post("/register_user", async (req, res) => {
     const { referenceId, email, externalWalletAddress } = req.body;
 
-    // Kiểm tra thông tin bắt buộc
     if (!referenceId || !externalWalletAddress) {
         return res.status(400).json({ error: "Missing required fields" });
     }
@@ -33,7 +31,7 @@ app.post("/register_user", async (req, res) => {
                 "x-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
                 "content-type": "application/json",
             },
-            
+
             body: JSON.stringify({
                 referenceId,
                 email,
@@ -43,18 +41,109 @@ app.post("/register_user", async (req, res) => {
 
         const data = await response.json();
 
-        // Trả về phản hồi của GameShift API
+
         if (response.ok) {
-            return res.status(201).json(data); // Thành công
+            return res.status(201).json(data);
         } else {
-            return res.status(response.status).json(data); // Lỗi từ GameShift
+            return res.status(response.status).json(data);
         }
     } catch (error) {
         console.error("Error while connecting to GameShift:", error.message);
         return res.status(500).json({ error: "Internal Server Error" });
     }
 });
+// Route: Transfer item giữa người dùng qua GameShift API
+app.post("/transfer_item", async (req, res) => {
+    const { userId, quantity, destinationUserReferenceId } = req.body;
 
+    if (!userId || !quantity || !destinationUserReferenceId) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const url = `${GAMESHIFT_API_BASE}/${userId}/items/de0cf472-e521-42e4-a4b9-b226885d9c1f/transfer`;
+
+    try {
+        // Gửi yêu cầu tới GameShift API
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                accept: "application/json",
+                "x-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                quantity,
+                destinationUserReferenceId,
+            }),
+        });
+
+        const data = await response.json();
+
+
+        if (response.ok) {
+            return res.status(200).json(data);
+        } else {
+            return res.status(response.status).json(data);
+        }
+    } catch (error) {
+        console.error("Error while transferring item:", error.message);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+// lấy tất cả users
+app.get("/all_users", async (req, res) => {
+    try {
+        const url = `${GAMESHIFT_API_BASE}`;
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                accept: "application/json",
+                "x-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
+            },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            return res.status(200).json(data);
+        } else {
+            return res.status(response.status).json(data);
+        }
+    } catch (error) {
+        console.error("Error while fetching all users:", error.message);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+// lấy ra all item
+app.get("/user_items/:referenceId", async (req, res) => {
+    const { referenceId } = req.params;
+
+    if (!referenceId) {
+        return res.status(400).json({ error: "Missing referenceId parameter" });
+    }
+
+    try {
+        const url = `${GAMESHIFT_API_BASE}/${referenceId}/items`;
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                accept: "application/json",
+                "x-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
+            },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            return res.status(200).json(data);
+        } else {
+            return res.status(response.status).json(data);
+        }
+    } catch (error) {
+        console.error("Error while fetching user items:", error.message);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 // Route: Kiểm tra người dùng qua GameShift
 app.get("/find_user/:referenceId", async (req, res) => {
     const { referenceId } = req.params;
@@ -76,9 +165,9 @@ app.get("/find_user/:referenceId", async (req, res) => {
         const data = await response.json();
 
         if (response.ok) {
-            return res.status(200).json(data); // Thành công
+            return res.status(200).json(data);
         } else {
-            return res.status(response.status).json(data); // Không tìm thấy
+            return res.status(response.status).json(data);
         }
     } catch (error) {
         console.error("Error while fetching user from GameShift:", error.message);

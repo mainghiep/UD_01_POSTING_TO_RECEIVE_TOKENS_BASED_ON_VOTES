@@ -3,6 +3,8 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Util from "../util/Util";
+import UserService from "../services/UserService";
+import RankService from "../services/RankService";
 
 function ButtonConnectWallet() {
     const { publicKey, connected } = useWallet();
@@ -32,11 +34,48 @@ function ButtonConnectWallet() {
             console.error("Error fetching user:", err);
         }
     };
-
+    // tìm user theo id(publickey)
+    const findUserByIds = async () => {
+        try {
+            const res = await UserService.getById(publicKey);
+            Util.setUser(res.data);
+        } catch (err) {
+            // console.error(err);
+            const newUser = {
+                id: publicKey.toString(),
+                publickey: publicKey.toString(),
+                username: publicKey.toString(),
+                role: 0,
+                status: 1,
+                point: 0,
+            };
+            // khi load lại trang lần đầu tiên mà người dùng đã kết nối ví thì sẽ tự load và tạo ra 2 user
+            // nên phải check lần nữa
+            UserService.getById(publicKey)
+                .then((res) => {})
+                .catch((err) => {
+                    UserService.add(newUser).then((response) => {
+                        console.log("new user", response);
+                        // tạo rank
+                        const newRank = {
+                            id: response.data.id,
+                            userId: response.data.id,
+                            totalPoint: 0,
+                            rankName: 0,
+                        };
+                        RankService.add(newRank).then((res) => {
+                            console.log("tạo rank cho user ", newRank);
+                        });
+                        Util.setUser(response.data);
+                    });
+                });
+        }
+    };
     // Lắng nghe thay đổi publicKey
     useEffect(() => {
         if (publicKey) {
-            findUserById(); // Tìm người dùng khi đã kết nối
+            findUserById();
+            findUserByIds(); // Tìm người dùng khi đã kết nối
         } else {
             Util.setUser(null); // Xóa thông tin người dùng khi ngắt kết nối
         }
