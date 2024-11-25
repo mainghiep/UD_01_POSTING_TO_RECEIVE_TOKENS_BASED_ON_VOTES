@@ -54,16 +54,18 @@ app.post("/register_user", async (req, res) => {
 });
 // Route: Transfer item giữa người dùng qua GameShift API
 app.post("/transfer_item", async (req, res) => {
-    const { userId, quantity, destinationUserReferenceId } = req.body;
 
-    if (!userId || !quantity || !destinationUserReferenceId) {
-        return res.status(400).json({ error: "Missing required fields" });
+    console.log("Body nhận được:", req.body);
+
+    const { quantity, destinationUserReferenceId } = req.body;
+
+    if (!quantity || !destinationUserReferenceId) {
+        return res.status(400).json({ error: "Thiếu các trường yêu cầu" });
     }
 
-    const url = `${GAMESHIFT_API_BASE}/${userId}/items/de0cf472-e521-42e4-a4b9-b226885d9c1f/transfer`;
+    const url = `${GAMESHIFT_API_BASE}/5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L/items/de0cf472-e521-42e4-a4b9-b226885d9c1f/transfer`; // Endpoint API GameShift
 
     try {
-        // Gửi yêu cầu tới GameShift API
         const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -79,15 +81,14 @@ app.post("/transfer_item", async (req, res) => {
 
         const data = await response.json();
 
-
         if (response.ok) {
             return res.status(200).json(data);
         } else {
             return res.status(response.status).json(data);
         }
     } catch (error) {
-        console.error("Error while transferring item:", error.message);
-        return res.status(500).json({ error: "Internal Server Error" });
+        console.error("Lỗi khi chuyển vật phẩm:", error.message);
+        return res.status(500).json({ error: "Lỗi máy chủ nội bộ" });
     }
 });
 // lấy tất cả users

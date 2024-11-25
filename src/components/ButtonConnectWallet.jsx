@@ -34,13 +34,21 @@ function ButtonConnectWallet() {
             console.error("Error fetching user:", err);
         }
     };
-    // tìm user theo id(publickey)
     const findUserByIds = async () => {
         try {
-            const res = await UserService.getById(publicKey);
-            Util.setUser(res.data);
+            // Kiểm tra nếu đã tồn tại user
+            const response = await UserService.getById(publicKey.toString());
+            if (response?.data) {
+                console.log("User exists:", response.data);
+                Util.setUser(response.data);
+                return; // Dừng nếu user đã tồn tại
+            }
         } catch (err) {
-            // console.error(err);
+            console.log("User not found, creating a new one...");
+        }
+
+        // Tạo mới user nếu không tồn tại
+        try {
             const newUser = {
                 id: publicKey.toString(),
                 publickey: publicKey.toString(),
@@ -49,33 +57,32 @@ function ButtonConnectWallet() {
                 status: 1,
                 point: 0,
             };
-            // khi load lại trang lần đầu tiên mà người dùng đã kết nối ví thì sẽ tự load và tạo ra 2 user
-            // nên phải check lần nữa
-            UserService.getById(publicKey)
-                .then((res) => {})
-                .catch((err) => {
-                    UserService.add(newUser).then((response) => {
-                        console.log("new user", response);
-                        // tạo rank
-                        const newRank = {
-                            id: response.data.id,
-                            userId: response.data.id,
-                            totalPoint: 0,
-                            rankName: 0,
-                        };
-                        RankService.add(newRank).then((res) => {
-                            console.log("tạo rank cho user ", newRank);
-                        });
-                        Util.setUser(response.data);
-                    });
-                });
+
+            // Thêm user
+            const response = await UserService.add(newUser);
+            console.log("tao moi :", response.data);
+
+            // Tạo rank cho user
+            const newRank = {
+                id: response.data.id,
+                userId: response.data.id,
+                totalPoint: 0,
+                rankName: 0,
+            };
+            await RankService.add(newRank);
+            console.log("tao rank:", newRank);
+
+            // Lưu thông tin user vào trạng thái
+            Util.setUser(response.data);
+        } catch (err) {
+            console.error("Error creating user or rank:", err);
         }
     };
     // Lắng nghe thay đổi publicKey
     useEffect(() => {
         if (publicKey) {
+            findUserByIds();
             findUserById();
-            findUserByIds(); // Tìm người dùng khi đã kết nối
         } else {
             Util.setUser(null); // Xóa thông tin người dùng khi ngắt kết nối
         }

@@ -95,7 +95,7 @@ const UserClientPage = () => {
                     <Card
                         style={{ height: "100%", width: "100%", padding: "30px" }}
                         title={"Thông tin "}
-                        extra={<SendSol  totalPoint={userLogin?.point} viewPublicKey={params.id} />}
+                        extra={<SendSol totalPoint={userLogin?.point} viewPublicKey={params.id} />}
                     >
                         <Row justify="center" style={{ flex: 1 }}>
                             <Col lg={4} md={24} sm={24}>
@@ -122,7 +122,6 @@ const UserClientPage = () => {
                             <Col span={6}>
                                 <Typography.Title level={5}>: {userLogin?.point}</Typography.Title>
                             </Col>
-                            <Col span={14}></Col>
                         </Row>
                     </Card>
                 </Col>
@@ -145,25 +144,25 @@ const UserClientPage = () => {
                                     <List.Item>
                                         <Alert message={
                                             <List.Item.Meta
-                                            // avatar={
-                                            //     <Typography.Title level={5}>
-                                            //         {index + 1}
-                                            //     </Typography.Title>
-                                            // }
-                                            title={
-                                                <a
-                                                    onClick={() => {
-                                                        navigate("/post/" + item.id);
-                                                    }}
-                                                    style={{ textDecoration: "none" }}
-                                                >
-                                                    {item.title}
-                                                </a>
-                                            }
-                                            description={"" + item.createAt}
-                                        />
+                                                // avatar={
+                                                //     <Typography.Title level={5}>
+                                                //         {index + 1}
+                                                //     </Typography.Title>
+                                                // }
+                                                title={
+                                                    <a
+                                                        onClick={() => {
+                                                            navigate("/post/" + item.id);
+                                                        }}
+                                                        style={{ textDecoration: "none" }}
+                                                    >
+                                                        {item.title}
+                                                    </a>
+                                                }
+                                                description={"" + item.createAt}
+                                            />
                                         } type="info" />
-                                        
+
                                         {/* {item.content} */}
                                     </List.Item>
                                 )}

@@ -1,90 +1,82 @@
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { clusterApiUrl, Connection, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { Alert, Button, Card, Col, Input, InputNumber, Modal, Row, Space, Typography } from "antd";
-import React, { useCallback, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { Button, Col, InputNumber, Modal, Row, Space, Typography } from "antd";
+import { useState } from "react";
 import { toast } from "react-toastify";
-import Swal from "sweetalert2";
 import Util from "../../util/Util";
-
-const ConvertPoint = ({ totalPoint }) => {
-    const { connected, publicKey, sendTransaction } = useWallet();
-    const { connection } = useConnection();
-    // const [load, setLoad] = useState(true);
+import UserService from "../../services/UserService";
+const ConvertPoint = ({ totalPoint, setTotalPoint, userLogin }) => {
+    const { connected, publicKey } = useWallet();
     const [point, setPoint] = useState(0);
-
     // Open Modal
     const [isModalOpen, setIsModalOpen] = useState(false);
     const handleCancel = () => {
         setIsModalOpen(false);
     };
 
-    const sendSol = () => {
-        var myHeaders = new Headers();
-        myHeaders.append("x-api-key", "BMEGXzNX8HL-0T59");
-        myHeaders.append("Content-Type", "application/json");
-
-        const fromPubKey = new PublicKey("CtEkPyqstJ8zeRRdnD6AnQPVjX1fDa5idAZ9C3SYyCEo");
-        var raw = JSON.stringify({
-            network: "devnet",
-            from_address: fromPubKey,
-            to_address: new PublicKey(publicKey.toString()),
-            amount: point / 10,
-        });
-        console.log("raw", raw);
-
-        var requestOptions = {
-            method: "POST",
-            headers: myHeaders,
-            body: raw,
-            redirect: "follow",
-        };
-
-        fetch("https://api.shyft.to/sol/v1/wallet/send_sol", requestOptions)
-            .then((response) => response.json())
-            .then(async (result) => {
-                // console.log(result);
-                const endcoded = result.result.encoded_transaction;
-
-                console.log("endcode ", endcoded);
-                const network = clusterApiUrl("devnet");
-                const connection = new Connection(network);
-
-                const provider = getProvider(); // see "Detecting the Provider"
-
-                const transaction = Transaction.from(
-                    Buffer.from(result.result.encoded_transaction, "base64")
-                );
-                const { signature } = await provider.signAndSendTransaction(transaction);
-                await connection.getSignatureStatus(signature);
-
-                toast.success("thành công");
-                console.log("Transaction successful with signature:", signature);
-            })
-            .catch((error) => console.log("error", error));
-    };
-    // Kiểm tra và sử dụng Buffer
-    const Buffer = globalThis.Buffer;
-    const toTransaction = (endcodeTransaction) =>
-        Transaction.from(Uint8Array.from(atob(endcodeTransaction), (c) => c.charCodeAt(0)));
-    // Placeholder for your provider detection logic
-    const getProvider = () => {
-        if ("phantom" in window) {
-            const provider = window.phantom?.solana;
-            if (provider?.isPhantom) {
-                return provider;
-            }
+    // Gửi Token qua API
+    const sendToken = async () => {
+        if (!connected) {
+            toast.warning("Vui lòng kết nối ví Phantom trước");
+            return;
         }
-        window.open("https://phantom.app/", "_blank");
+        if (!Number.isInteger(point) || point <= 0) {
+            toast.error("Vui lòng nhập số lượng hợp lệ.");
+            return;
+        }
+        if (point > totalPoint) {
+            toast.error("Số điểm không đủ để đổi.");
+            return;
+        }
+        try {
+            // Gửi yêu cầu tới API chuyển đổi điểm sang token
+            const response = await fetch("http://localhost:8888/transfer_item", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    quantity: point.toString(),
+                    destinationUserReferenceId: publicKey.toString(),
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                toast.success("Đổi token thành công!");
+                console.log("Response từ API:", result);
+                const newTotalPoint = totalPoint - point;
+                setTotalPoint(newTotalPoint);
+                const updatedUser = {
+                    ...userLogin,
+                    point: newTotalPoint,  // Cập nhật điểm mới vào thông tin người dùng
+                };
+                try {
+                    await UserService.update(userLogin.id, updatedUser);
+                    toast.success("Cập nhật điểm thành công!");
+                } catch (error) {
+                    console.error("Cập nhật điểm thất bại", error);
+                    toast.error("Có lỗi khi cập nhật điểm.");
+                }
+
+                setIsModalOpen(false);
+            } else {
+                throw new Error(result.error || "Lỗi không xác định");
+            }
+        } catch (error) {
+            console.error("Error transferring token:", error);
+            toast.error(`Lỗi khi đổi token: ${error.message}`);
+        }
     };
+
     return (
         <div>
             <Button
                 onClick={() => {
                     if (!Util.User) {
-                        toast.warning("Vui lòng kết nối ví phantom");
+                        toast.warning("Vui lòng kết nối ví Phantom");
                         return;
                     }
-                    setIsModalOpen(true);
                     setIsModalOpen(true);
                 }}
             >
@@ -92,7 +84,7 @@ const ConvertPoint = ({ totalPoint }) => {
             </Button>
 
             <Modal
-                title="Đổi point thành sol"
+                title="Đổi Point thành Token"
                 width={"50%"}
                 open={isModalOpen}
                 onCancel={handleCancel}
@@ -105,25 +97,20 @@ const ConvertPoint = ({ totalPoint }) => {
                             <Typography.Text strong> {totalPoint} </Typography.Text>
                         </Col>
                     </Row>
-                    <Row color="red">
+                    <Row>
                         <div className="alert alert-success w-100 mb-0" role="alert">
                             <Typography.Text>Giá trị quy đổi: </Typography.Text>
-                            <Typography.Text strong> 1 Point = 0.1 sol </Typography.Text>
+                            <Typography.Text strong> 1 Point = 1 Token</Typography.Text>
                         </div>
-                        {/* <Alert
-                            style={{ width: "100%" }}
-                            message={"Giá trị quy đổi: 1 Point = 0.1 sol "}
-                            type="success"
-                        /> */}
                     </Row>
                     <Row>
                         <Col span={24}>
                             <Typography.Text>Point đổi </Typography.Text>
                             <InputNumber
-                                placeholder="max = 50"
-                                step={5}
+                                placeholder="Max = {totalPoint}"
+                                step={1}
                                 min={0}
-                                max={50}
+                                max={totalPoint}
                                 style={{
                                     width: "100%",
                                 }}
@@ -136,8 +123,8 @@ const ConvertPoint = ({ totalPoint }) => {
                 <Row>
                     <Col span={24}>
                         <div className="d-flex justify-content-end mt-2">
-                            <Button onClick={sendSol} type="primary">
-                                Đổi sol
+                            <Button onClick={sendToken} type="primary">
+                                Đổi Token
                             </Button>
                         </div>
                     </Col>
