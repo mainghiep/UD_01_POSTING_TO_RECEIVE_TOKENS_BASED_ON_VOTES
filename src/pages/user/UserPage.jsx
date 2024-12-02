@@ -16,7 +16,7 @@ const UserPage = () => {
     const [posts, setPosts] = useState([]);
     const [name, setName] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [totalPoint, setTotalPoint] = useState(0);
+    const [totalPoint, setTotalPoint] = useState();
 
     const handleChange = (e) => {
         setName(e.target.value.trim());

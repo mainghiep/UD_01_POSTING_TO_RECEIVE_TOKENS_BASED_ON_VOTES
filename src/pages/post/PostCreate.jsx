@@ -8,6 +8,7 @@ import Util from "../../util/Util";
 import getDateNow from "./../../util/GetDateNow";
 import UserService from "../../services/UserService";
 import RankService from "../../services/RankService";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 const schema = yup.object({
     title: yup.string().trim("nhập title").required("Cần nhập Title"),
@@ -21,6 +22,7 @@ const yupSync = {
 };
 
 const CreatePost = () => {
+    const {  publicKey } = useWallet();
     const navigate = useNavigate();
     const [form] = Form.useForm();
 
@@ -66,7 +68,7 @@ const CreatePost = () => {
                 console.log(res.data);
                 toast.success("Tạo post thành công");
                 // lấy user => tạo post tăng 5 điểm
-                UserService.getById(res.data.userId).then((response) => {
+                UserService.getById(publicKey).then((response) => {
                     // console.log(response.data);
                     const user = {
                         ...response.data,

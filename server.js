@@ -63,7 +63,7 @@ app.post("/transfer_item", async (req, res) => {
         return res.status(400).json({ error: "Thiếu các trường yêu cầu" });
     }
 
-    const url = `${GAMESHIFT_API_BASE}/5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L/items/de0cf472-e521-42e4-a4b9-b226885d9c1f/transfer`; // Endpoint API GameShift
+    const url = `${GAMESHIFT_API_BASE}/5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L/items/baad07ad-161b-407f-8bdd-20035c307955/transfer`; // Endpoint API GameShift
 
     try {
         const response = await fetch(url, {

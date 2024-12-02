@@ -58,13 +58,13 @@ const DetailPost = () => {
                     InteractPostService.add(interactPost)
                         .then((res) => {
                             // lấy user từ post => like thì point tăng 1
-                            UserService.getById(res.data.userId).then((responseUser) => {
+                            UserService.getById(publicKey).then((responseUser) => {
                                 const user = {
                                     ...responseUser.data,
                                     point: responseUser.data.point + 1,
                                 };
                                 // tăng point
-                                UserService.update(post.userId, user).then((saveUser) => {
+                                UserService.update(publicKey, user).then((saveUser) => {
                                     console.log("update point user", saveUser);
                                 });
 
