@@ -1,11 +1,12 @@
-import { Button, Card, Col, Form, Input, Row, Select } from "antd";
+import { Button, Card, Col, Form, Input, Row, Upload, message, Spin } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { toast } from "react-toastify";
 import PostService from "../../services/PostService";
 import Util from "../../util/Util";
-import getDateNow from "./../../util/GetDateNow";
+import getDateNow from "../../util/GetDateNow";
 import UserService from "../../services/UserService";
 import RankService from "../../services/RankService";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -13,6 +14,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 const schema = yup.object({
     title: yup.string().trim("nhập title").required("Cần nhập Title"),
     content: yup.string().required("Nhập Content"),
+    prices: yup.number().required("Nhập giá").positive("Giá phải lớn hơn 0"),
 });
 
 const yupSync = {
@@ -22,108 +24,209 @@ const yupSync = {
 };
 
 const CreatePost = () => {
-    const {  publicKey } = useWallet();
+    const { publicKey } = useWallet();
     const navigate = useNavigate();
     const [form] = Form.useForm();
+    const [data, setData] = useState([]);
+    const [imageUrl, setImageUrl] = useState(""); // Lưu trữ URL ảnh tải lên
+    const [loading, setLoading] = useState(false);
 
-    const [data, setData] = useState();
     const fetchData = async () => {
         let res = await PostService.getPosts();
-        // console.log(res);
         setData([...res.data]);
     };
+
     useEffect(() => {
         fetchData();
     }, []);
 
+    const handleImageUpload = async (file) => {
+        try {
+            // Giả lập upload ảnh (hoặc thay bằng API upload của bạn)
+            const uploadedUrl = `https://example.com/uploads/${file.name}`;
+            setImageUrl(uploadedUrl);
+            message.success("Tải ảnh thành công!");
+            return false; // Dừng upload mặc định của Ant Design
+        } catch (error) {
+            message.error("Tải ảnh thất bại!");
+            return false;
+        }
+    };
+
     const submitForm = async (values) => {
-        // kiểm tra xem user đã connect ví chưa
         if (!Util.User) {
             toast.warning("Vui lòng kết nối ví phantom");
             return;
         }
 
-        const post = {
-            ...values,
-            id: "",
-            userId: Util.User.id,
-            status: 1,
-            createAt: getDateNow(),
-        };
-        // Kiểm tra xem danh sách Post có phần tử không
-        if (data.length > 0) {
-            // Tìm độ dài của danh sách và tạo mã code mới
-            const newId = "Post" + (data.length + 1).toString().padStart(3, "0");
-            // Đặt giá trị mã code mới vào ID
-            post.id = newId;
-        } else {
-            // Nếu danh sách Post rỗng, sử dụng giá trị mặc định
-            post.id = "Post001";
+        if (!imageUrl) {
+            toast.warning("Vui lòng tải lên ảnh");
+            return;
         }
-        post.id += Util.User.id + Util.generateRandomString(3);
+        setLoading(true);
 
-        // tạo new post
-        PostService.add(post)
-            .then((res) => {
-                console.log(res.data);
-                toast.success("Tạo post thành công");
-                // lấy user => tạo post tăng 5 điểm
-                UserService.getById(publicKey).then((response) => {
-                    // console.log(response.data);
-                    const user = {
-                        ...response.data,
-                        point: response.data.point + 5,
-                    };
-                    UserService.update(user.id, user).then((res) => {
-                        console.log("update point in user ", res);
-                    });
-                    // tăng total point trong rank + 5
-                    RankService.updateTotalPoint(user.id, 5).then((res) => {
-                        console.log("rank update totalPoint ", res);
-                        navigate("/");
-                    });
-                });
-            })
-            .catch((err) => {
-                toast.warning("Tạo post thất bại ");
-                console.log(err);
+        const assetDetails = {
+            collectionId: "ba7976fa-91e8-4991-8b71-29ad089e4bfb",
+            description: values.content,
+            imageUrl: imageUrl, // Sử dụng URL ảnh tải lên
+            name: values.title,
+        };
+
+        try {
+            const assetResponse = await fetch("http://localhost:8888/nx/unique-assets", {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    details: assetDetails,
+                    destinationUserReferenceId: '5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L',
+                }),
             });
+
+            if (!assetResponse.ok) {
+                const errorData = await assetResponse.json();
+                throw new Error(`Failed to create asset: ${errorData.message || assetResponse.status}`);
+            }
+
+            const assetData = await assetResponse.json();
+            const assetId = assetData.id;
+            console.log(assetId)
+            const gia = values.prices;
+
+            // Thêm độ trễ 5 giây (5000ms) để đảm bảo tài sản đã được tạo xong
+            await new Promise(resolve => setTimeout(resolve, 10000));
+
+            const listForSaleResponse = await fetch(`http://localhost:8888/list-for-sale`, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    id: String(assetId).trim(),
+                    price: {
+                        currencyId: "USDC", // Loại tiền tệ
+                        naturalAmount: gia, // Giá bán
+                    },
+                }),
+            });
+
+            if (!listForSaleResponse.ok) {
+                const errorData = await listForSaleResponse.json();
+                throw new Error(`Failed to list asset for sale: ${errorData.message || listForSaleResponse.status}`);
+            }
+
+            const listForSaleData = await listForSaleResponse.json();
+            if (listForSaleData.consentUrl) {
+                window.location.href = listForSaleData.consentUrl;
+            }
+
+            const post = {
+                ...values,
+                id: "",
+                userId: publicKey,
+                status: 1,
+                createAt: getDateNow(),
+                idNFT: assetId,
+            };
+
+            if (data.length > 0) {
+                const newId = "Post" + (data.length + 1).toString().padStart(3, "0");
+                post.id = newId;
+            } else {
+                post.id = "Post001";
+            }
+            post.id += Util.User.id + Util.generateRandomString(3);
+
+            PostService.add(post)
+                .then((res) => {
+                    toast.success("Tạo post thành công");
+                    UserService.getById(publicKey).then((response) => {
+                        const user = {
+                            ...response.data,
+                            point: response.data.point + 5,
+                        };
+                        UserService.update(user.id, user).then((res) => {
+                            console.log("update point in user ", res);
+                        });
+                        RankService.updateTotalPoint(user.id, 5).then((res) => {
+                            console.log("rank update totalPoint ", res);
+                            navigate("/");
+                        });
+                    });
+                })
+                .catch((err) => {
+                    toast.warning("Tạo post thất bại ");
+                    console.log(err);
+                });
+        } catch (error) {
+            console.error("Error creating asset or post:", error);
+            toast.error(`Lỗi: ${error.message || 'Không thể tạo tài sản NFT. Vui lòng thử lại.'}`);
+        } finally {
+            setLoading(false); // Kết thúc quá trình loading
+        }
     };
 
     return (
         <div>
             <Card title={"Tạo post"}>
-                <Form
-                    onFinish={submitForm}
-                    form={form}
-                    layout="vertical"
-                    style={{
-                        maxWidth: 600,
-                        margin: "0 auto",
-                    }}
-                >
-                    <Row justify={"center"}>
-                        <Col span={24}>
-                            <Form.Item name="title" label="Tiêu đề" rules={[yupSync]}>
-                                <Input placeholder="Vd Example" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row justify={"center"}>
-                        <Col span={24}>
-                            <Form.Item name="content" label="Nội dung" rules={[yupSync]}>
-                                <Input.TextArea rows={5} placeholder="Vd Example" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    {/*  */}
-                    <Row justify={"center"}>
-                        <Button type="primary" htmlType="submit" size="large">
-                            Tạo post
-                        </Button>
-                    </Row>
-                </Form>
+                <Spin spinning={loading}>
+                    <Form
+                        onFinish={submitForm}
+                        form={form}
+                        layout="vertical"
+                        style={{
+                            maxWidth: 600,
+                            margin: "0 auto",
+                        }}
+                    >
+                        <Row justify={"center"}>
+                            <Col span={24}>
+                                <Form.Item name="title" label="Tiêu đề" rules={[yupSync]}>
+                                    <Input placeholder="Vd Example" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row justify={"center"}>
+                            <Col span={24}>
+                                <Form.Item name="content" label="Nội dung" rules={[yupSync]}>
+                                    <Input.TextArea rows={5} placeholder="Vd Example" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row justify={"center"}>
+                            <Col span={24}>
+                                <Form.Item name="prices" label="Giá bán" rules={[yupSync]}>
+                                    <Input type="number" placeholder="Nhập giá" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row justify={"center"}>
+                            <Col span={24}>
+                                <Form.Item label="Tải lên ảnh">
+                                    <Upload
+                                        beforeUpload={handleImageUpload}
+                                        showUploadList={false}
+                                    >
+                                        <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+                                    </Upload>
+                                    {imageUrl && (
+                                        <img
+                                            src={imageUrl}
+                                            alt="Uploaded"
+                                            style={{ marginTop: 10, maxWidth: "100%" }}
+                                        />
+                                    )}
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row justify={"center"}>
+                            <Button type="primary" htmlType="submit" size="large">
+                                Tạo post
+                            </Button>
+                        </Row>
+                    </Form>
+                </Spin>
             </Card>
         </div>
     );

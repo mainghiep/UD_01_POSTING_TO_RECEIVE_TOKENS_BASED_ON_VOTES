@@ -175,6 +175,103 @@ app.get("/find_user/:referenceId", async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error" });
     }
 });
+app.post('/nx/unique-assets', async (req, res) => {
+    const { details, destinationUserReferenceId } = req.body;
+
+    if (!details || !destinationUserReferenceId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const url = `https://api.gameshift.dev/nx/unique-assets`;
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                accept: "application/json",
+                "x-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                details,
+                destinationUserReferenceId,
+            }),
+        });
+
+        // Kiểm tra phản hồi
+        if (!response.ok) {
+            return res.status(response.status).json({
+                error: `Failed to call external API. Status: ${response.status}`,
+            });
+        }
+
+        const responseData = await response.json();
+
+        console.log('Received data from external API:', responseData);
+
+        res.status(200).json(responseData); // Trả phản hồi lại client
+    } catch (error) {
+        console.error('Error calling external API:', error);
+        res.status(500).json({ error: 'An error occurred while processing the request.' });
+    }
+});
+app.get("/api/items/:id", async (req, res) => {
+    const itemId = req.params.id; // Lấy ID từ URL
+    const url = `https://api.gameshift.dev/nx/items/${itemId}`;
+    const options = {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            "x-api-key":
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
+        },
+    };
+
+    try {
+        // Gửi request tới API gốc
+        const response = await fetch(url, options);
+        const data = await response.json();
+
+        // Trả về response từ API gốc
+        res.status(response.status).json(data);
+    } catch (error) {
+        console.error("Error fetching item:", error);
+        res.status(500).json({ error: "Failed to fetch item from API" });
+    }
+})
+app.use(express.json());
+app.post('/list-for-sale', async (req, res) => {
+    const { id, price } = req.body;
+    console.log("body" + id)
+    if (!id || !price || !price.currencyId || !price.naturalAmount) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const url = `https://api.gameshift.dev/nx/unique-assets/${id}/list-for-sale`;
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                accept: "application/json",
+                "x-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ 
+                price
+             }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            return res.status(200).json(data);
+        } else {
+            return res.status(response.status).json(data);
+        }
+    } catch (error) {
+        console.error("Error listing item for sale:", error.message);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 
 // Start server
 app.listen(PORT, () => {
