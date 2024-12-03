@@ -1,4 +1,4 @@
-import { Button, Card, Col, Row, Space, Typography } from "antd";
+import { Avatar, Button, Card, Col, Image, Row, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PostService from "../../services/PostService";
@@ -18,20 +18,83 @@ const DetailPost = () => {
     const [load, setLoad] = useState(false);
     const [post, setPost] = useState();
     const [likes, setLikes] = useState();
-
-    const fetchDetail = async () => {
-        // console.log("param ", params);
-        let res = await PostService.getById(params.id);
-        let resLike = await InteractPostService.getTotalLikeByPostId(params.id);
-        setPost({ ...res.data });
-        setLikes(resLike);
-        // console.log("resLike", resLike.length);
+    const [nft, setNft] = useState(null);
+    const [user, setUser] = useState(null);
+    const fetchUserDetails = async () => {
+        try {
+            const response = await UserService.getById(post?.userId); // Lấy user bằng userId từ post
+            setUser(response.data); // Lưu thông tin người dùng vào state
+        } catch (error) {
+            console.error("Error fetching user details:", error);
+        }
     };
+    const fetchDetail = async () => {
+        try {
+            let res = await PostService.getById(params.id);
+            let resLike = await InteractPostService.getTotalLikeByPostId(params.id);
+            setPost({ ...res.data });
+            setLikes(resLike);
+            if (res.data.idNFT) {
+                const nftRes = await fetch(`http://localhost:8888/api/items?idNFT=${res.data.idNFT}`, {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                }).then((res) => res.json());
+
+                setNft(nftRes);
+                console.log(nftRes)
+            }
+        } catch (error) {
+            console.error("Error fetching post or NFT:", error);
+            toast.error("Failed to fetch details");
+        }
+    };
+    useEffect(() => {
+        if (post?.userId) {
+            fetchUserDetails(); // Nếu có userId trong post, gọi hàm lấy thông tin người dùng
+        }
+    }, [post?.userId]);
 
     useEffect(() => {
         fetchDetail();
     }, [load]);
+    const handlePayment = async () => {
+        if (!publicKey) {
+            toast.warning("Vui lòng kết nối ví Phantom để tiếp tục.");
+            return;
+        }
 
+        try {
+            await fetch("http://localhost:8888/buy-asset", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    buyerId: publicKey.toString(),
+                    itemId: nft?.item?.id, // ID của tài sản từ NFT
+                }),
+            }).then((response) => {
+                if (!response.ok) {
+                    throw new Error("Request failed");
+                }
+                return response.json();
+            })
+                .then((data) => {
+                    console.log("Consent URL:", data.consentUrl);
+
+                    // Hiển thị thông báo cho người dùng
+                    alert("Giao dịch đã sẵn sàng, chuyển hướng để tiếp tục.");
+
+                    // Mở tab mới với consentUrl
+                    window.open(data.consentUrl, "_blank");
+                })
+                .catch((error) => {
+                    alert("Giao dịch thất bại, vui lòng thử lại!");
+                    console.error("Error:", error);
+                });
+        } catch (error) {
+            console.error("Lỗi thanh toán:", error);
+            toast.error("Có lỗi xảy ra khi thực hiện thanh toán.");
+        }
+    };
     const likePost = async (post) => {
         console.log("detail like post", post);
         if (!Util.User) {
@@ -88,56 +151,75 @@ const DetailPost = () => {
     };
 
     return (
-        <div
-            style={{
-                height: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            <Card style={{ height: "100%", width: "100%", padding: "50px" }}>
-                <Row justify="center" align="middle" style={{ textAlign: "center", width: "100%" }}>
-                    <Typography.Title style={{ margin: "0" }}>{post?.title}</Typography.Title>
-                </Row>
-                <Row justify="start" align="middle">
-                    <Button icon={<CalendarOutlined />} type="text" iconPosition={"start"}>
-                        {post?.createAt}
-                    </Button>
-                </Row>
-                <Row justify="start" align="middle" style={{ textAlign: "center", width: "100%" }}>
-                    <Button
-                        onClick={() => {
-                            likePost(post);
-                            
-                        }}
-                        icon={<LikeOutlined />}
-                        type="text"
-                        iconPosition={"start"}
-                    >
-                        {likes}
-                    </Button>
-                </Row>
-                <Row justify="start" align="middle" style={{ textAlign: "center", width: "100%" }}>
-                    <Button
-                        onClick={() => {
-                            navigate("/user/view/" + post?.userId);
-                        }}
-                        icon={<UserOutlined />}
-                        type="text"
-                        iconPosition={"start"}
-                    >
-                        {post?.userId}
-                    </Button>
-                </Row>
-                <hr className="border  border-2 opacity-50" />
-                <Row justify="center" style={{ flex: 1 }}>
-                    <Col span={24}>
-                        <p>{post?.content}</p>
-                    </Col>
-                </Row>
-            </Card>
-        </div>
+        <Row justify="center" style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+            <Col xs={22} sm={22} md={20} lg={16} xl={14}>
+                <Card style={{ width: '100%' }}>
+                    <Card.Meta
+                        avatar={<Avatar icon={<UserOutlined />} size={48} />}
+                        title={
+                            <Space direction="vertical" size={0}>
+                                <Button
+                                    type="link"
+                                    onClick={() => navigate("/user/view/" + post?.userId)}
+                                    style={{ padding: 0, height: 'auto', fontSize: '16px' }}
+                                >
+                                    {user ? user.username : 'Không rõ'}
+                                </Button>
+                                <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
+                                    <CalendarOutlined /> {post?.createAt}
+                                </Typography.Text>
+                            </Space>
+                        }
+                    />
+
+                    <Typography.Title level={4} style={{ margin: '16px 0' }}>
+                        {post?.title}
+                    </Typography.Title>
+
+                    <Typography.Paragraph style={{ margin: '16px 0', fontSize: '14px' }}>
+                        {post?.content}
+                    </Typography.Paragraph>
+
+                    {nft && (
+                        <div style={{ margin: '16px 0' }}>
+                            <Image
+                                src={nft.item.imageUrl}
+                                alt="NFT Image"
+                                style={{ width: '100%', maxHeight: '500px', objectFit: 'cover' }}
+                            />
+                        </div>
+                    )}
+
+                    <Space size="middle" style={{ marginTop: '16px' }}>
+                        <Button
+                            icon={<LikeOutlined />}
+                            onClick={() => likePost(post)}
+                        >
+                            {likes} Likes
+                        </Button>
+                        <Button 
+                            type="primary" 
+                            onClick={handlePayment} 
+                            disabled={!nft?.item.forSale}  // Disable nếu forSale là false
+                        >
+                            {nft?.item.forSale ? "Mua Ngay" : "Đã bán"}  {/* Nội dung nút */}
+                        </Button>
+                        {
+                            nft && nft.item.price ? (
+                                <>
+                                    {nft.item.price.currencyId || ' '}
+                                    :
+                                    {nft.item.price.naturalAmount || ' '}
+                                </>
+                            ) : (
+                                'Giá Không có sẵn'
+                            )
+                        }
+                        
+                    </Space>
+                </Card>
+            </Col>
+        </Row>
     );
 };
 

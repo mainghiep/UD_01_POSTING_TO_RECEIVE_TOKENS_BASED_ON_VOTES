@@ -41,18 +41,28 @@ const CreatePost = () => {
     }, []);
 
     const handleImageUpload = async (file) => {
+        const formData = new FormData();
+        formData.append("image", file);
         try {
-            // Giả lập upload ảnh (hoặc thay bằng API upload của bạn)
-            const uploadedUrl = `https://example.com/uploads/${file.name}`;
-            setImageUrl(uploadedUrl);
+            const response = await fetch("http://localhost:8888/upload_image", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error("Tải ảnh thất bại!");
+            }
+
+            const data = await response.json();
+            setImageUrl(data.filePath);
             message.success("Tải ảnh thành công!");
-            return false; // Dừng upload mặc định của Ant Design
+            return false;
         } catch (error) {
-            message.error("Tải ảnh thất bại!");
+            message.error(error.message || "Lỗi không xác định khi tải ảnh");
             return false;
         }
     };
-
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const submitForm = async (values) => {
         if (!Util.User) {
             toast.warning("Vui lòng kết nối ví phantom");
@@ -68,7 +78,7 @@ const CreatePost = () => {
         const assetDetails = {
             collectionId: "ba7976fa-91e8-4991-8b71-29ad089e4bfb",
             description: values.content,
-            imageUrl: imageUrl, // Sử dụng URL ảnh tải lên
+            imageUrl: `http://localhost:8888${imageUrl}`, // Sử dụng URL ảnh tải lên
             name: values.title,
         };
 
@@ -91,11 +101,14 @@ const CreatePost = () => {
 
             const assetData = await assetResponse.json();
             const assetId = assetData.id;
+            if (!assetId) {
+                throw new Error("Không thể tạo tài sản NFT. Thử lại.");
+            }
             console.log(assetId)
-            const gia = values.prices;
 
-            // Thêm độ trễ 5 giây (5000ms) để đảm bảo tài sản đã được tạo xong
-            await new Promise(resolve => setTimeout(resolve, 10000));
+            await sleep(12000);
+
+            const gia = values.prices;
 
             const listForSaleResponse = await fetch(`http://localhost:8888/list-for-sale`, {
                 method: "POST",
@@ -169,39 +182,36 @@ const CreatePost = () => {
 
     return (
         <div>
-            <Card title={"Tạo post"}>
+            <Card title="Tạo bài viết">
                 <Spin spinning={loading}>
                     <Form
                         onFinish={submitForm}
                         form={form}
                         layout="vertical"
-                        style={{
-                            maxWidth: 600,
-                            margin: "0 auto",
-                        }}
+                        style={{ maxWidth: 600, margin: "0 auto" }}
                     >
-                        <Row justify={"center"}>
+                        <Row justify="center">
                             <Col span={24}>
                                 <Form.Item name="title" label="Tiêu đề" rules={[yupSync]}>
-                                    <Input placeholder="Vd Example" />
+                                    <Input placeholder="Nhập tiêu đề" />
                                 </Form.Item>
                             </Col>
                         </Row>
-                        <Row justify={"center"}>
+                        <Row justify="center">
                             <Col span={24}>
                                 <Form.Item name="content" label="Nội dung" rules={[yupSync]}>
-                                    <Input.TextArea rows={5} placeholder="Vd Example" />
+                                    <Input.TextArea rows={5} placeholder="Nhập nội dung" />
                                 </Form.Item>
                             </Col>
                         </Row>
-                        <Row justify={"center"}>
+                        <Row justify="center">
                             <Col span={24}>
                                 <Form.Item name="prices" label="Giá bán" rules={[yupSync]}>
                                     <Input type="number" placeholder="Nhập giá" />
                                 </Form.Item>
                             </Col>
                         </Row>
-                        <Row justify={"center"}>
+                        <Row justify="center">
                             <Col span={24}>
                                 <Form.Item label="Tải lên ảnh">
                                     <Upload
@@ -212,7 +222,7 @@ const CreatePost = () => {
                                     </Upload>
                                     {imageUrl && (
                                         <img
-                                            src={imageUrl}
+                                            src={`http://localhost:8888${imageUrl}`}
                                             alt="Uploaded"
                                             style={{ marginTop: 10, maxWidth: "100%" }}
                                         />
@@ -220,9 +230,9 @@ const CreatePost = () => {
                                 </Form.Item>
                             </Col>
                         </Row>
-                        <Row justify={"center"}>
+                        <Row justify="center">
                             <Button type="primary" htmlType="submit" size="large">
-                                Tạo post
+                                Tạo bài viết
                             </Button>
                         </Row>
                     </Form>

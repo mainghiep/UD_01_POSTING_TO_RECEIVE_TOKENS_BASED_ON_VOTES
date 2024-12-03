@@ -2,19 +2,28 @@ import express from 'express';
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import cors from 'cors';
-
+import multer from "multer";
+import path from "path";
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 const GAMESHIFT_API_BASE = "https://api.gameshift.dev/nx/users";
 
 const app = express();
 const PORT = 8888;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 app.use(cors({
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'x-api-key'],
 }));
 app.use(bodyParser.json());
-
+app.use(express.json());
 // Route: Đăng ký người dùng mới với GameShift
+const uploadPath = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath);
+}
 app.post("/register_user", async (req, res) => {
     const { referenceId, email, externalWalletAddress } = req.body;
 
@@ -214,9 +223,9 @@ app.post('/nx/unique-assets', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while processing the request.' });
     }
 });
-app.get("/api/items/:id", async (req, res) => {
-    const itemId = req.params.id; // Lấy ID từ URL
-    const url = `https://api.gameshift.dev/nx/items/${itemId}`;
+app.get("/api/items", async (req, res) => {
+    const { idNFT } = req.query; // Lấy ID từ URL
+    const url = `https://api.gameshift.dev/nx/items/${idNFT}`;
     const options = {
         method: "GET",
         headers: {
@@ -238,7 +247,7 @@ app.get("/api/items/:id", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch item from API" });
     }
 })
-app.use(express.json());
+
 app.post('/list-for-sale', async (req, res) => {
     const { id, price } = req.body;
     console.log("body" + id)
@@ -255,9 +264,9 @@ app.post('/list-for-sale', async (req, res) => {
                 "x-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
                 "content-type": "application/json",
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 price
-             }),
+            }),
         });
 
         const data = await response.json();
@@ -271,8 +280,83 @@ app.post('/list-for-sale', async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error" });
     }
 });
+app.post("/buy-asset", async (req, res) => {
+    const { buyerId,itemId } = req.body;
 
+    if (!buyerId) {
+        return res.status(400).json({ error: "buyerId là bắt buộc" });
+    }
+    if (!itemId) {
+        return res.status(400).json({ error: "itemId là bắt buộc" });
+    }
+    const url = `https://api.gameshift.dev/nx/unique-assets/${itemId}/buy`;
+    const options = {
+        method: "POST",
+        headers: {
+            accept: "application/json",
+            "x-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({ buyerId }),
+    };
 
+    try {
+        // Gửi request tới API bên ngoài
+        const response = await fetch(url, options);
+        const data = await response.json();
+
+        if (!response.ok) {
+            return res.status(response.status).json({ error: data.message || "Có lỗi xảy ra" });
+        }
+
+        // Trả về kết quả từ API
+        res.status(200).json(data);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Lỗi server" });
+    }
+});
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, "uploads")); // Thư mục lưu trữ file
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+    },
+});
+
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        const fileTypes = /jpeg|jpg|png/;
+        const extName = fileTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimeType = fileTypes.test(file.mimetype);
+
+        if (mimeType && extName) {
+            return cb(null, true);
+        } else {
+            cb(new Error("Chỉ hỗ trợ file hình ảnh (jpeg, jpg, png)!"));
+        }
+    },
+    limits: { fileSize: 5 * 1024 * 1024 }, // Giới hạn 5 MB
+});
+
+// Endpoint upload ảnh
+app.post("/upload_image", upload.single("image"), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: "Không có file nào được tải lên!" });
+    }
+
+    const filePath = `/uploads/${req.file.filename}`;
+    res.status(200).json({
+        message: "Tải ảnh thành công!",
+        filePath: filePath, // Đường dẫn tương đối của file
+    });
+});
+
+// Cấu hình thư mục tĩnh để truy cập file đã tải lên
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
