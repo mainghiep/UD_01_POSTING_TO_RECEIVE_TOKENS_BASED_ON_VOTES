@@ -1,24 +1,6 @@
 {
   "posts": [
     {
-      "id": "Post0036TdrBtkcdexB22bNytCgde67zx9cnVBoTze4MsZogkaZRnb",
-      "title": "Công dụng của ngũ cốc",
-      "content": "Mình tạo thread này để chia sẻ đến các bạn đã đang có ý định học tiếng Trung những từ vựng phổ biến. Nếu bạn có bất kỳ câu hỏi nào hoặc tips liên quan đến việc học từ vựng thì hãy cùng nhau chia sẻ nhé.Mình sẽ post từ vựng hàng tuần vào thread này.",
-      "userId": "6TdrBtkcdexB22bNytCgde67zx9cnVBoTze4MsZogkaZ",
-      "status": 1,
-      "createAt": "2024-07-31 17:43:49"
-    },
-    {
-      "id": "Post002undefinedj2T",
-      "title": "FPT",
-      "content": "FPT poly",
-      "prices": "1",
-      "userId": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
-      "status": 1,
-      "createAt": "2024-12-03 15:07:55",
-      "idNFT": "2fc650fc-de8d-4dfe-8dc0-8f09120ba70b"
-    },
-    {
       "id": "Post003undefinedThr",
       "title": "Compa 100 củ",
       "content": "Antony",
@@ -57,6 +39,46 @@
       "status": 1,
       "createAt": "2024-12-03 20:25:40",
       "idNFT": "fe30405f-a39b-45dd-93f2-33b0d25c29ef"
+    },
+    {
+      "id": "Post007undefinedAVJ",
+      "title": "Mohamed Salah(Vua AI Cập)",
+      "content": "Mohamed Salah Hamed Mahrous Ghaly (tiếng Ả Rập: محمد صلاح حامد محروس غالي‎,[3] sinh ngày 15 tháng 6 năm 1992), thường được biết đến với tên gọi Mohamed Salah hay Mo Salah, là một cầu thủ bóng đá chuyên nghiệp người Ai Cập hiện đang thi đấu ở vị trí tiền đạo cho câu lạc bộ Premier League Liverpool và là đội trưởng của đội tuyển bóng đá quốc gia Ai Cập.",
+      "prices": "2",
+      "userId": "5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L",
+      "status": 1,
+      "createAt": "2024-12-03 20:34:13",
+      "idNFT": "b345093a-522f-48f7-94e3-0139ebae6bfc"
+    },
+    {
+      "id": "Post008undefinedo5L",
+      "title": "NFT test",
+      "content": "nooi dung",
+      "prices": "1",
+      "userId": "5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L",
+      "status": 1,
+      "createAt": "2024-12-04 15:32:26",
+      "idNFT": "8f2de9c0-37b6-4405-83c3-1eb8ce4c7877"
+    },
+    {
+      "id": "Post009undefinedHer",
+      "title": "GigaCha",
+      "content": "GigaChad là một thuật ngữ và biểu tượng mạng, đề cập đến hình mẫu người đàn ông lý tưởng với vẻ ngoài hấp dẫn, thể hình cường tráng, sự tự tin và thành công trong cuộc sống.\nGigaChad meme là những hình ảnh hoặc biểu tượng đại diện cho GigaChad, được sử dụng để truyền tải nhiều ý nghĩa khác nhau, thường là chế nhạo hoặc mỉa mai những cá nhân không đạt được tiêu chuẩn như GigaChad.",
+      "prices": "2",
+      "userId": "5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L",
+      "status": 1,
+      "createAt": "2024-12-04 20:51:13",
+      "idNFT": "dd7d2c8e-69b3-4a99-bdb9-df8259d8f124"
+    },
+    {
+      "id": "Post010undefinedTUM",
+      "title": "Romelu LAKAKA",
+      "content": "Lukaku bắt đầu sự nghiệp câu lạc bộ cấp cao của mình khi chơi cho Anderlecht, nơi anh đã giành chức vô địch Belgian Pro League và kết thúc với tư cách là vua phá lưới của giải đấu. Năm 2011, anh gia nhập Chelsea trong một vụ chuyển nhượng trị giá 10 triệu bảng Anh (12 triệu euro), nhưng thời gian thi đấu hạn chế dẫn đến việc cho West Bromwich Albion và Everton mượn",
+      "prices": "2",
+      "userId": "5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L",
+      "status": 1,
+      "createAt": "2024-12-04 20:58:44",
+      "idNFT": "31f6d093-15cb-4b2e-ad2b-c380bf542354"
     }
   ],
   "users": [
@@ -74,7 +96,7 @@
       "username": "acquy666",
       "role": 0,
       "status": 1,
-      "point": 25,
+      "point": 47,
       "isPrime": true
     },
     {
@@ -115,7 +137,7 @@
       "username": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
       "role": 0,
       "status": 1,
-      "point": 57,
+      "point": 62,
       "isPrime": true
     }
   ],
@@ -497,6 +519,48 @@
       "postId": "Post004undefined1zB",
       "userId": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
       "createAt": "2024-12-03 20:13:35"
+    },
+    {
+      "id": "LikePost008undefinedo5Lk5ha1",
+      "postId": "Post008undefinedo5L",
+      "userId": "5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L",
+      "createAt": "2024-12-04 15:36:27"
+    },
+    {
+      "id": "LikePost007undefinedAVJNOwCL",
+      "postId": "Post007undefinedAVJ",
+      "userId": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
+      "createAt": "2024-12-04 15:48:15"
+    },
+    {
+      "id": "LikePost008undefinedo5L7iSAw",
+      "postId": "Post008undefinedo5L",
+      "userId": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
+      "createAt": "2024-12-04 15:55:45"
+    },
+    {
+      "id": "LikePost006undefinedjg1NYs9L",
+      "postId": "Post006undefinedjg1",
+      "userId": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
+      "createAt": "2024-12-04 15:55:56"
+    },
+    {
+      "id": "LikePost0036TdrBtkcdexB22bNytCgde67zx9cnVBoTze4MsZogkaZRnbsczJn",
+      "postId": "Post0036TdrBtkcdexB22bNytCgde67zx9cnVBoTze4MsZogkaZRnb",
+      "userId": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
+      "createAt": "2024-12-04 15:56:06"
+    },
+    {
+      "id": "LikePost005undefined3SG5FGma",
+      "postId": "Post005undefined3SG",
+      "userId": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
+      "createAt": "2024-12-04 15:56:09"
+    },
+    {
+      "id": "LikePost009undefinedHerH7xhm",
+      "postId": "Post009undefinedHer",
+      "userId": "5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L",
+      "createAt": "2024-12-04 20:52:02"
     }
   ],
   "ranks": [
@@ -515,7 +579,7 @@
     {
       "id": "5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L",
       "userId": "5cLh5vzEkWfwBwWhJ3fNQU8vaS48ngnyug8JNt48nG5L",
-      "totalPoint": 39,
+      "totalPoint": 61,
       "rankName": 0
     },
     {
@@ -581,7 +645,7 @@
     {
       "id": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
       "userId": "5RAeBamaTGPjqzba4UJWRguzMb6sT8QKtAf2fd7dEg1J",
-      "totalPoint": 67,
+      "totalPoint": 72,
       "rankName": 0
     }
   ]

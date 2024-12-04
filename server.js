@@ -281,7 +281,7 @@ app.post('/list-for-sale', async (req, res) => {
     }
 });
 app.post("/buy-asset", async (req, res) => {
-    const { buyerId,itemId } = req.body;
+    const { buyerId, itemId } = req.body;
 
     if (!buyerId) {
         return res.status(400).json({ error: "buyerId là bắt buộc" });
@@ -315,6 +315,55 @@ app.post("/buy-asset", async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Lỗi server" });
     }
+});
+app.post("/cancel-listing", async (req, res) => {
+    const { itemId } = req.body;
+    const url = `https://api.gameshift.dev/nx/unique-assets/${itemId}/cancel-listing`;
+    const options = {
+        method: "POST",
+        headers: {
+            accept: "application/json",
+            "x-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI",
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({ itemId })
+
+    };
+    try {
+        // Gửi request tới API bên ngoài
+        const response = await fetch(url, options);
+        const data = await response.json();
+        if (!response.ok) {
+            return res.status(response.status).json({ error: data.message || "Có lỗi xảy ra" });
+        }
+
+        // Trả về kết quả từ API
+        res.status(200).json(data);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Lỗi server" });
+    }
+})
+app.get('/fetch-nft-details/:referenceId', (req, res) => {
+    const { referenceId } = req.params;
+    const url = `https://api.gameshift.dev/nx/users/${referenceId}/items`;
+    const options = {
+        method: 'GET',
+        headers: {
+            accept: 'application/json',
+            'x-api-key': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJjNDFjM2RjMy0xMDU1LTRhZDYtODk1Ni04OGU2MThmZDI5YTgiLCJzdWIiOiIxN2NiOWZiMy0wYjQxLTQ5YTctYTJjZC0wZjFlZjY4MWJmYjAiLCJpYXQiOjE3MzE5OTQ1NjV9.6lg5-pe4F09-9wUQo2Zp0cjNl84SVaqWtYezYnK26jI'
+        }
+    };
+
+    fetch(url, options)
+        .then(response => response.json())
+        .then(json => {
+            res.json(json);
+        })
+        .catch(err => {
+            console.error('Error fetching data:', err);
+            res.status(500).json({ message: 'Failed to fetch data', error: err.message });
+        });
 });
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

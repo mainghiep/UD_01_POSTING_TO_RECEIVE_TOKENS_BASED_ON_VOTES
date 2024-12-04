@@ -1,4 +1,4 @@
-import { Avatar, Button, Card, Col, Image, Row, Space, Typography } from "antd";
+import { Avatar, Button, Card, Col, Image, Modal, Row, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PostService from "../../services/PostService";
@@ -48,6 +48,33 @@ const DetailPost = () => {
             toast.error("Failed to fetch details");
         }
     };
+    const handleCancelListing = () => {
+        Modal.confirm({
+            title: "Xác nhận hủy bán",
+            content: "Bạn có chắc chắn muốn hủy bán tài sản này không?",
+            okText: "Đồng ý",
+            cancelText: "Hủy bỏ",
+            onOk: async () => {
+                try {
+                    const response = await fetch("http://localhost:8888/cancel-listing", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ itemId: nft.item.id }),
+                    });
+                    const data = await response.json();
+                    const consentUrl = data.consentUrl;
+                    window.open(consentUrl, '_blank');
+                    setLoad(!load);
+                } catch (error) {
+                    console.error("Lỗi khi hủy bán:", error);
+                    toast.error("Không thể hủy bán. Vui lòng thử lại sau.");
+                }
+            },
+            onCancel: () => {
+                console.log("Hủy bỏ hành động hủy bán");
+            },
+        });
+    };
     useEffect(() => {
         if (post?.userId) {
             fetchUserDetails(); // Nếu có userId trong post, gọi hàm lấy thông tin người dùng
@@ -69,7 +96,7 @@ const DetailPost = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     buyerId: publicKey.toString(),
-                    itemId: nft?.item?.id, // ID của tài sản từ NFT
+                    itemId: nft?.item?.id,
                 }),
             }).then((response) => {
                 if (!response.ok) {
@@ -85,6 +112,7 @@ const DetailPost = () => {
 
                     // Mở tab mới với consentUrl
                     window.open(data.consentUrl, "_blank");
+                    setLoad(!load);
                 })
                 .catch((error) => {
                     alert("Giao dịch thất bại, vui lòng thử lại!");
@@ -197,9 +225,9 @@ const DetailPost = () => {
                         >
                             {likes} Likes
                         </Button>
-                        <Button 
-                            type="primary" 
-                            onClick={handlePayment} 
+                        <Button
+                            type="primary"
+                            onClick={handlePayment}
                             disabled={!nft?.item.forSale}  // Disable nếu forSale là false
                         >
                             {nft?.item.forSale ? "Mua Ngay" : "Đã bán"}  {/* Nội dung nút */}
@@ -215,7 +243,16 @@ const DetailPost = () => {
                                 'Giá Không có sẵn'
                             )
                         }
-                        
+                        {nft?.item.forSale && (
+                            <Button
+                                type="default"
+                                danger
+                                onClick={handleCancelListing}
+                            >
+                                Hủy Bán
+                            </Button>
+                        )}
+
                     </Space>
                 </Card>
             </Col>

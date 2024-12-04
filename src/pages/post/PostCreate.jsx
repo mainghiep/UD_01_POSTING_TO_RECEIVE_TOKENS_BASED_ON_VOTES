@@ -28,7 +28,7 @@ const CreatePost = () => {
     const navigate = useNavigate();
     const [form] = Form.useForm();
     const [data, setData] = useState([]);
-    const [imageUrl, setImageUrl] = useState(""); // Lưu trữ URL ảnh tải lên
+    const [imageUrl, setImageUrl] = useState("");
     const [loading, setLoading] = useState(false);
 
     const fetchData = async () => {
@@ -78,7 +78,7 @@ const CreatePost = () => {
         const assetDetails = {
             collectionId: "ba7976fa-91e8-4991-8b71-29ad089e4bfb",
             description: values.content,
-            imageUrl: `http://localhost:8888${imageUrl}`, // Sử dụng URL ảnh tải lên
+            imageUrl: `http://localhost:8888${imageUrl}`,
             name: values.title,
         };
 
@@ -118,8 +118,8 @@ const CreatePost = () => {
                 body: JSON.stringify({
                     id: String(assetId).trim(),
                     price: {
-                        currencyId: "USDC", // Loại tiền tệ
-                        naturalAmount: gia, // Giá bán
+                        currencyId: "USDC",
+                        naturalAmount: gia,
                     },
                 }),
             });
@@ -176,7 +176,7 @@ const CreatePost = () => {
             console.error("Error creating asset or post:", error);
             toast.error(`Lỗi: ${error.message || 'Không thể tạo tài sản NFT. Vui lòng thử lại.'}`);
         } finally {
-            setLoading(false); // Kết thúc quá trình loading
+            setLoading(false);
         }
     };
 

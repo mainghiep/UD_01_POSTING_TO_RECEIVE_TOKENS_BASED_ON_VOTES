@@ -22,7 +22,7 @@ function App() {
 
                     <Route path="user/:id" element={<UserPage />}></Route>
                     <Route path="user/view/:id" element={<UserClientPage />}></Route>
-                    <Route path="user/nft/:id" element={<MyNFT />}></Route>
+                    <Route path="user/nft/:referenceId" element={<MyNFT />}></Route>
 
                     <Route path="nft" element={<NFTPage />}></Route>
                     <Route path="register" element={<RegisterPage />} />
